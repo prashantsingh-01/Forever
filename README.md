@@ -14,7 +14,7 @@ A **modern, full-featured ecommerce platform** built with a scalable architectur
 ## 🏗️ Project Structure
 
 forever-ecommerce/  
-├── admin/ # Admin Panel (Vite + React)   
+├── admin/ # Admin Panel (Vite + React)  
 ├── frontend/ # Customer Storefront (Vite + React)  
 └── backend/ # API Server (Node.js + Express + MongoDB)
 
@@ -35,25 +35,33 @@ ADMIN_PASSWORD=your_admin_password
 STRIPE_SECRET_KEY=your_stripe_secret_key
 ```
 
-### 🌐 Frontend (`/frontend/.env`)  
-```  
-VITE_BACKEND_URL=your_backend_api_url 
-``` 
-### 🛠️ Admin Panel (`/admin/.env`)
+### 🌐 Frontend (`/frontend/.env`)
+
 ```
 VITE_BACKEND_URL=your_backend_api_url
 ```
-⚠️ Replace all placeholder values with your actual environment-specific credentials and URLs. 
+
+### 🛠️ Admin Panel (`/admin/.env`)
+
+```
+VITE_BACKEND_URL=your_backend_api_url
+```
+
+⚠️ Replace all placeholder values with your actual environment-specific credentials and URLs.
 
 ---
 
 ## 📦 Installation & Setup
+
 1. Clone the Repository
-``` 
-git clone https://github.com/yourusername/forever-ecommerce.git
-cd forever-ecommerce 
+
 ```
+git clone https://github.com/yourusername/forever-ecommerce.git
+cd forever-ecommerce
+```
+
 2. Install Dependencies
+
 ```
 # Backend
 cd backend
@@ -67,11 +75,13 @@ npm install
 cd ../admin
 npm install
 ```
+
 3. Create Environment Files
-Create .env files in each of the three folders (backend, frontend, admin) and fill them as shown above.
+   Create .env files in each of the three folders (backend, frontend, admin) and fill them as shown above.
 
 4. Run Development Servers
-Open three separate terminal tabs or windows:
+   Open three separate terminal tabs or windows:
+
 ```
 # Backend
 cd backend
@@ -85,22 +95,27 @@ npm run dev
 cd admin
 npm run dev
 ```
+
 ---
 
 ## 🚀 Features
+
 ### 🧑 Customer (Frontend)
+
 - Product browsing & search
 - Cart and checkout system
 - User signup/signin
 - Payment integration via Stripe
 
 ### 👨‍💼 Admin Panel
+
 - Add, Delete products
 - Manage users and orders
 - Upload images via Cloudinary
 - Secure login for admin access
 
 ## 🖥️ Backend API
+
 - RESTful endpoints
 - JWT authentication
 - MongoDB with Mongoose
@@ -108,6 +123,7 @@ npm run dev
 - Cloudinary image upload
 
 ### 🛠️ Tech Stack
+
 - Frontend & Admin: Vite + React + TailwindCSS
 - Backend: Node.js + Express + MongoDB + Mongoose
 - Auth: JWT
@@ -116,6 +132,7 @@ npm run dev
 - Deployment: Vercel (Frontend & Admin), Render/Heroku (Backend)
 
 ## 🙌 Acknowledgements
+
 - React
 - Express
 - MongoDB
