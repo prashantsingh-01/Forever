@@ -68,7 +68,7 @@ const listProduct = async (req, res) => {
       try {
         return res.json({
           success: true,
-          products: cached,
+          products: JSON.parse(cached),
           cached: true,
         });
       } catch (err) {
@@ -116,7 +116,7 @@ const singleProduct = async (req, res) => {
       try {
         return res.json({
           success: true,
-          product: cached,
+          product: JSON.parse(cached),
           cached: true,
         });
       } catch {
