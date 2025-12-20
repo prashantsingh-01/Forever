@@ -140,7 +140,7 @@ const allOrders = async (req, res) => {
 
     const orders = await orderModel.find({}).lean();
 
-    await client.set(cacheKey, JSON.stringify(orders), { ex: 3600 });
+    await client.set(cacheKey, orders, { ex: 3600 });
 
     res.json({ success: true, orders, cached: false });
   } catch (err) {
@@ -176,7 +176,7 @@ const userOrders = async (req, res) => {
       return res.json({ success: false, message: "No orders found" });
     }
     console.log("🗄️ Fetching userOrders from DB & setting cache");
-    await client.set(cacheKey, JSON.stringify(orders), { ex: 3600 });
+    await client.set(cacheKey, orders, { ex: 3600 });
 
     res.json({ success: true, orders });
   } catch (err) {
