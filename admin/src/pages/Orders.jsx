@@ -20,7 +20,7 @@ const Orders = ({ token }) => {
         { headers: { token } }
       );
       if (response.data.success) {
-        setOrders(response.data.orders.reverse);
+        setOrders(response.data.orders.reverse());
       } else {
         toast.error(response.data.message);
       }
@@ -48,7 +48,7 @@ const Orders = ({ token }) => {
 
   useEffect(() => {
     fetchAllOrders();
-  }, [token, statushandler]);
+  }, [token]);
 
   return (
     <div>

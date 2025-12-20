@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import productModel from "../models/productModel.js";
+import client from "../config/redis.js";
 
 // function for add product
 const addProduct = async (req, res) => {
@@ -46,6 +47,7 @@ const addProduct = async (req, res) => {
 
     const product = new productModel(productData);
     await product.save();
+    await client.del("productList");
 
     res.json({ success: true, message: "Product Added" });
   } catch (err) {
@@ -56,12 +58,33 @@ const addProduct = async (req, res) => {
 
 // function for list product
 const listProduct = async (req, res) => {
-  console.log("List Product");
   try {
-    const products = await productModel.find({});
-    res.json({ success: true, products });
+    const cacheKey = "productList";
+    const cached = await client.get(cacheKey);
+
+    if (cached) {
+      console.log("🔥 Serving productList from cache");
+
+      try {
+        return res.json({
+          success: true,
+          products: cached,
+          cached: true,
+        });
+      } catch (err) {
+        console.error("❌ Corrupted prodcutList cache detected:", cacheKey);
+        await client.del(cacheKey);
+      }
+    }
+
+    console.log("🗄️ Fetching productList from DB & setting cache");
+
+    const products = await productModel.find({}).lean();
+
+    await client.set(cacheKey, JSON.stringify(products), { ex: 3600 });
+
+    res.json({ success: true, products, cached: false });
   } catch (err) {
-    console.log(err);
     res.json({ success: false, message: err.message });
   }
 };
@@ -69,7 +92,12 @@ const listProduct = async (req, res) => {
 // function for remove product
 const removeProduct = async (req, res) => {
   try {
-    await productModel.findByIdAndDelete(req.body.id);
+    const { id } = req.body;
+    await productModel.findByIdAndDelete(id);
+
+    await client.del("productList");
+    await client.del(`product-${id}`);
+
     res.json({ success: true, message: "Product Removed" });
   } catch (err) {
     console.log(err);
@@ -81,10 +109,32 @@ const removeProduct = async (req, res) => {
 const singleProduct = async (req, res) => {
   try {
     const { productId } = req.body;
+    const cacheKey = `product-${productId}`;
+
+    const cached = await client.get(cacheKey);
+    if (cached) {
+      try {
+        return res.json({
+          success: true,
+          product: cached,
+          cached: true,
+        });
+      } catch {
+        console.error("❌ Corrupted singleProduct cache detected:", cacheKey);
+        await client.del(cacheKey);
+      }
+    }
+
     const product = await productModel.findById(productId);
-    res.json({ success: true, product });
+    if (!product) {
+      return res.json({ success: false, message: "Product not found" });
+    }
+
+    console.log("🗄️ Fetching singleProduct from DB & setting cache");
+    await client.set(cacheKey, JSON.stringify(product), { ex: 3600 });
+
+    res.json({ success: true, product, cached: false });
   } catch (err) {
-    console.log(err);
     res.json({ success: false, message: err.message });
   }
 };

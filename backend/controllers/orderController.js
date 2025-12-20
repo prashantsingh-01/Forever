@@ -1,6 +1,7 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
 import Stripe from "stripe";
+import client from "../config/redis.js";
 
 // global variables
 const currency = "inr";
@@ -26,6 +27,7 @@ const placeOrder = async (req, res) => {
 
     const newOrder = new orderModel(orderData);
     await newOrder.save();
+    await client.del("allOrders");
 
     await userModel.findByIdAndUpdate(userId, { cartData: {} });
 
@@ -54,6 +56,8 @@ const placeOrderStripe = async (req, res) => {
 
     const newOrder = new orderModel(orderData);
     await newOrder.save();
+    await client.del("allOrders");
+    await client.del(`order-${newOrder._id}`);
 
     const line_items = items.map((item) => ({
       price_data: {
@@ -98,9 +102,12 @@ const verifyStripe = async (req, res) => {
     if (success === "true") {
       await orderModel.findByIdAndUpdate(orderId, { payment: true });
       await userModel.findByIdAndUpdate(userId, { cartData: {} });
+      await client.del("allOrders");
       res.json({ success: true });
     } else {
       await orderModel.findByIdAndDelete(orderId);
+      await client.del("allOrders");
+      await client.del(`order-${orderId}`);
       res.json({ success: false });
     }
   } catch (err) {
@@ -112,8 +119,30 @@ const verifyStripe = async (req, res) => {
 // All Orders Data For Admin Panel
 const allOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({});
-    res.json({ success: true, orders });
+    const cacheKey = "allOrders";
+    const cached = await client.get(cacheKey);
+
+    if (cached) {
+      console.log("🔥 Serving allOrders from cache");
+
+      try {
+        return res.json({
+          success: true,
+          orders: cached,
+          cached: true,
+        });
+      } catch (error) {
+        console.error("❌ Corrupted allOrders cache detected:", cacheKey);
+        await client.del(cacheKey);
+      }
+    }
+    console.log("🗄️ Fetching allOrders from DB & setting cache");
+
+    const orders = await orderModel.find({}).lean();
+
+    await client.set(cacheKey, JSON.stringify(orders), { ex: 3600 });
+
+    res.json({ success: true, orders, cached: false });
   } catch (err) {
     console.log(err);
     res.json({ success: false, message: err.message });
@@ -124,7 +153,31 @@ const allOrders = async (req, res) => {
 const userOrders = async (req, res) => {
   try {
     const { userId } = req.body;
-    const orders = await orderModel.find({ userId });
+    const cacheKey = `userOrders-${userId}`;
+
+    const cached = await client.get(cacheKey);
+    if (cached) {
+      console.log("🔥 Serving userOrders from cache");
+
+      try {
+        return res.json({
+          success: true,
+          orders: cached,
+          cached: true,
+        });
+      } catch (error) {
+        console.error("❌ Corrupted userOrders cache detected:", cacheKey);
+        await client.del(cacheKey);
+      }
+    }
+
+    const orders = await orderModel.find({ userId }).lean();
+    if (!orders) {
+      return res.json({ success: false, message: "No orders found" });
+    }
+    console.log("🗄️ Fetching userOrders from DB & setting cache");
+    await client.set(cacheKey, JSON.stringify(orders), { ex: 3600 });
+
     res.json({ success: true, orders });
   } catch (err) {
     console.log(err);
@@ -137,7 +190,9 @@ const updateStatus = async (req, res) => {
   try {
     const { orderId, status } = req.body;
 
-    await orderModel.findByIdAndUpdate(orderId, { status });
+    await orderModel.findByIdAndUpdate(orderId, { status }).lean();
+    await client.del("allOrders");
+    await client.del(`order-${orderId}`);
     res.json({ success: true, message: "order updated" });
   } catch (err) {
     console.log(err);
