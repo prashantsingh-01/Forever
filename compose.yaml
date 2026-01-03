@@ -1,78 +1,27 @@
-version: "3.8"
-
 services:
-  frontend:
-    depends_on:
-      - api
-    build: ./frontend
-    ports:
-      - "5173:5173"
-    environment:
-      - VITE_BACKEND_URL=http://localhost:5000
-    develop:
-      watch:
-        - path: ./frontend/package.json
-          action: rebuild
-        - path: ./frontend/package-lock.json
-          action: rebuild
-        - path: ./frontend
-          target: /app
-          action: sync
-
-  admin:
-    depends_on:
-      - api
-    build: ./admin
-    ports:
-      - "5174:5174"
-    environment:
-      - VITE_BACKEND_URL=http://localhost:5000
-    develop:
-      watch:
-        - path: ./admin/package.json
-          action: rebuild
-        - path: ./admin/package-lock.json
-          action: rebuild
-        - path: ./admin
-          target: /app
-          action: sync
-
-  api:
-    depends_on:
-      - mongo
+  backend:
     build: ./backend
     ports:
       - "5000:5000"
     env_file:
-      - ./backend/.env
-    environment:
-      NODE_ENV: development
-      PORT: 5000
-      MONGODB_URI: ${MONGODB_URI}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_SECRET_KEY: ${CLOUDINARY_SECRET_KEY}
-      CLOUDINARY_NAME: ${CLOUDINARY_NAME}
-      JWT_SECRET: ${JWT_SECRET}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    restart: unless-stopped
+      - .env
 
-  mongo:
-    image: mongo:6.0
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_DATABASE: e-commerce
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-    volumes:
-      - mongo-data:/data/db
+  frontend:
+    build: ./frontend
     ports:
-      - "27017:27017"
+      - "5173:5173"
+    command: npm run dev -- --host
+    environment:
+      - VITE_BACKEND_URL=http://backend-service:5000
+    depends_on:
+      - backend
 
-volumes:
-  mongo-data:
-    driver: local
+  admin:
+    build: ./admin
+    ports:
+      - "5174:5174"
+    command: npm run dev -- --host
+    environment:
+      - VITE_BACKEND_URL=http://backend-service:5000
+    depends_on:
+      - backend
