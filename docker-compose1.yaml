@@ -1,0 +1,28 @@
+services:
+  backend:
+    build: ./backend
+    image: forever-backend
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build: ./frontend
+    image: forever-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+  admin:
+    build: ./admin
+    image: forever-admin
+    ports:
+      - "5174:5174"
+    environment:
+      - VITE_BACKEND_URL=http://localhost:5000
+    depends_on:
+      - backend
