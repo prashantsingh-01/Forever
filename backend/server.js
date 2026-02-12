@@ -15,14 +15,8 @@ connectDB();
 connectCloudinary();
 
 // Middlewares
-
-app.use(
-  cors({
-    origin: process.env.FRONTEND_URL,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "token"],
-  })
-);
+app.use(express.json());
+app.use(cors());
 
 // Api End points
 app.use("/api/user", userRoute);
