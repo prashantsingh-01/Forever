@@ -81,7 +81,7 @@ const listProduct = async (req, res) => {
 
     const products = await productModel.find({}).lean();
 
-    await client.set(cacheKey, products, { ex: 3600 });
+    await client.set(cacheKey, products, { ex: 86400 });
 
     res.json({ success: true, products, cached: false });
   } catch (err) {
