@@ -29,6 +29,7 @@ app.use(
     credentials: true,
   }),
 );
+
 // Api End points
 app.use("/api/user", userRoute);
 app.use("/api/product", productRoute);
