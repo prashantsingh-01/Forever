@@ -10,7 +10,10 @@ const adminAuth = async (req, res, next) => {
       });
     }
     const token_decode = jwt.verify(token, process.env.JWT_SECRET);
-    if (token_decode !== process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD) {
+    if (
+      token_decode.trim() !==
+      (process.env.ADMIN_EMAIL + process.env.ADMIN_PASSWORD).trim()
+    ) {
       return res.json({ success: false, message: "Forbidden. Not an admin." });
     }
     next();
